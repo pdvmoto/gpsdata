@@ -1,0 +1,37 @@
+
+/* 
+Goal is to have data on a map. Lines and stop-points on a map.
+
+source data : the *.log files or data in a table (ora or pg)
+output: a map to display in browser.
+
+datamodel: 
+    load-table: load the log files in tables, 
+    route-table: order/parition by Date (and time), select-into
+    for large volumes: convert by sqlldr into load-table, and exch-part
+
+implement
+ - create a GPRMC table (just this type is enough for the moment)
+ - sqlldr to load, potentially also external file
+ - use DT to select-order into data table, use seq to catch doubles.
+
+*/ 
+
+table:  see ct_gprmc.sql
+
+how to get lat + long: 
+select
+  round (   trunc ( g.lat / 100 ) 
+         +  mod ( g.lat / 100, 1 ) * 100/60, 6  ) as lat_dec
+, ' ,  ' as komma 
+, round (   trunc ( g.lon / 100 ) 
+         +  mod ( g.lon / 100, 1 ) * 100/60, 6 ) as lon_dec
+-- , g.* 
+from gprmc g 
+order by g.utc_hhmmss ; 
+
+
+
+
+
+
