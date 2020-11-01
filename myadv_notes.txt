@@ -10,6 +10,11 @@ datamodel:
     route-table: order/parition by Date (and time), select-into
     for large volumes: convert by sqlldr into load-table, and exch-part
 
+refinements:
+    have tables for zip+log files, to know where each point came from.
+    plan to display filename with the routes, possibly sections of routes per file.
+    reduce points: for every 3 points, if "direction" and "speed" of middle point are similar: skip it. 
+
 implement
  - create a GPRMC table (just type GPRMC is enough for the moment)
  - sqlldr to load, potentially also external file
