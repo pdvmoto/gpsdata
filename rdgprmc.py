@@ -28,7 +28,7 @@ run_id     = int ( 1 )
 
 print ( 'rdgprmc.py: Starting... ----------- ' )
 
-print ( srcfile, ' = the srfile' )
+print ( srcfile, ' = the srcfile' )
 print ( arg0, ' = arg0 ' )
 print ( ' --- ' )
 
@@ -92,6 +92,17 @@ with open("gprmc.csv") as csvfile:
 
           cur = con.cursor ()
           cur.execute ( sql_insert, ins_values )  
+
+          # check contents of row.
+          for i in row: 
+            print( srcfile, ': [',  i, ']') 
+
+          length = len(row) 
+               
+          # Iterating the index 
+          # same as 'for i in range(len(list))' 
+          for i in range(length): 
+            print( srcfile , ': ', i, row[i]) 
 
 # end with-open.
 
