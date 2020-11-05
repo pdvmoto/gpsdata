@@ -46,3 +46,74 @@ create table position_log (
 
 create unique index position_log_pk on position_log ( id, dt ) ; 
 
+
+/**** 
+more complete datamodel:
+
+for loading:
+ - gps_file : id + name + path + earliest data
+ - gps_line : key= (gfil_id, glin_nr) + all data + raw_line
+
+for trip logs:
+ - trip: id + name + startdate  +...
+ - trip_point :  trip_id, gfil_id, glin_nr, + any derived relevant data.
+ - trip_stop :   trip_id, stop_dt, opintal: link to  file_line, + any relevant data, notes
+ - trip_point_map :  subset of trip_points, reduce data for kml/kmz/gpx files, faster drawing.
+            note: can also flag trip_point as "mappable".
+
+background: 
+Raw data remains in file_lines. 
+Trip is mainly componsed by linking to lines. 
+and lines implicitly have an ordering in line_nr and timestamps.
+for mapping: not all points are needed. 
+if points are close, speed=same,  heading=same.. removed points in between..
+
+***/
+
+/**/
+
+drop sequence trip_seq; 
+drop sequence gps_file_seq;
+
+drop table trip_point ;
+drop table trip ; 
+
+drop table gps_file ;
+drop table gps_line ;
+
+create sequence trip_seq;
+create sequence gfil_seq;
+
+create table gps_file ( 
+  id            number          not null
+, fname         varchar2(128)   not null
+, fpath         varchar2(128) 
+, dt_loaded     date            not null    -- date the file was read/loaded.
+, dt_earliest   date                        -- earliest data in the file (dependent..)
+) ; 
+
+alter table gps_file add constraint gps_file_pk primary key ( id ) using index ; 
+
+create table gps_line (
+  gfil_id       number          not null 
+, line_nr       number          not null 
+, dt         date           -- date from line-info, if null chk file earliest/ or dt
+, lat        number         -- latitude, degrees, decimal, S=negative
+, lat_dir    varchar2(1)    -- direction, check: N or S
+, lon        number         -- longitude, degrees, decimal, W=Negative
+, lon_dir    varchar2(1)    -- direction, check E or W
+, pos_status varchar2(1)    -- check : A=ok or V=invalid
+, speed_kn   number         -- grondspeed, Knots
+, track_true number         -- direction, degrees, check [ 0, 360 >.
+, mag_var    number         -- check >= 0
+, var_dir    varchar2(1)    -- check E=subtract from true W=add to true
+, mode_ind   varchar2(1)    -- check: Auto, Diff, Est, Manual, Notvalid
+) ; 
+
+-- notes: consider timestamp for more precision ?
+-- notes: if no dt, then assume order-by file-earliest + linenr
+-- notes: consider not-null on several fields to always have valid lon/lat
+-- notes: consider check+range on several fields.
+
+alter table gps_line add constraint gps_line_pk primary key ( gfil_id, line_nr ) using index ; 
+

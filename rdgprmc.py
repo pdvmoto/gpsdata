@@ -101,7 +101,8 @@ with open("gprmc.csv") as csvfile:
                
           # Iterating the index 
           # same as 'for i in range(len(list))' 
-          for i in range(length): 
+          # for i in range(length): 
+          for i in range(len (row ) ): 
             print( srcfile , ': ', i, row[i]) 
 
 # end with-open.
