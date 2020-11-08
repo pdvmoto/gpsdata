@@ -82,7 +82,7 @@ drop table gps_file ;
 drop table gps_line ;
 
 create sequence trip_seq;
-create sequence gfil_seq;
+create sequence gps_file_seq;
 
 create table gps_file ( 
   id            number          not null
@@ -108,6 +108,7 @@ create table gps_line (
 , mag_var    number         -- check >= 0
 , var_dir    varchar2(1)    -- check E=subtract from true W=add to true
 , mode_ind   varchar2(1)    -- check: Auto, Diff, Est, Manual, Notvalid
+, chksum     varchar2(2)    -- checksum, see GGRMC spec, bitwise and, I think
 ) ; 
 
 -- notes: consider timestamp for more precision ?

@@ -11,12 +11,12 @@ datamodel:
     for large volumes: convert by sqlldr into load-table, and exch-part
 
     tables:
-    - rte-files : just file metadata, id, zipname, earliest date + trip (a file belongs to 1 trip?)
-    - rte_data : gprmc data, belonging to file_id (this can be temp, when moved to trip_map_pos(
+    - gps-files : just file metadata, id, zipname, earliest date + trip (a file belongs to 1 trip?)
+    - gps_lines : gprmc data, belonging to file_id (this can be temp, when moved to trip_map_pos(
 
     - trips     trp
-    - trip_legs tlg
-    - trip_leg_positions tlp
+    - trip_legs tlg (optional)
+    - trip_leg_positions tlp (can be links to existing data-points in file-lines)
     - trip_map_positions tmp (derived, less points then in leg-pos, save on kml/gpx data
     - trip_map_stops     tms (derived)
 
