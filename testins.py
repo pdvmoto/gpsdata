@@ -1,5 +1,5 @@
 
-## rdgprmc.py: reading GPS GPRMC$ records, insert into table
+## testins.py: demo insert stmtns
 
 # ---------
 #
@@ -28,9 +28,9 @@ dat_yyyymmdd = '19700101'
 
 run_id     = int ( 1 )
 
-pyfile = os.path.basename(__file__)
+pyfile = str ( os.path.basename(__file__) )
 arg0 = sys.argv[0]
-prefix=pyfile + ' '
+prefix = str ( pyfile + ' ' )
 
 def f_prefix():
 
@@ -77,13 +77,33 @@ end;
 
 con.commit()
 
-ins1=""" insert into cx_ora_test ( id, name, dt ) values ( :1, :2, to_date ( :3, 'YYYYMMDD')  """
+ins1=""" insert /* marker ins1 */ 
+         into cx_ora_test ( id, name,           dt ) 
+         values (           :1,   :2, to_date ( :3, 'YYYYMMDD')  ) """
 
 ins1_values = [ float (1), str ( "name" ) , str ( "20200101" ) ] 
 
+print ( f_prefix(), ins1 ) 
 print ( f_prefix(), ins1_values ) 
 
 cur.execute ( ins1, ins1_values ) 
+
+con.commit ()
+
+ins2=""" insert /* marker ins2 */ 
+         into cx_ora_test ( id, name,           dt ) 
+         values (           :1,   :2, to_date ( :3, :4 )  ) """
+
+
+n_id        = float ( 2 ) 
+s_name      = str ( "2ndname" )
+s_dt        = str ( "20200131 151617" )
+s_dt_fmt    = str ( "YYYYMMDD HH24MISS" )
+
+
+ins2_values = [ n_id, s_name, s_dt, s_dt_fmt  ] 
+
+cur.execute ( ins2, ins2_values ) 
 
 con.commit ()
 
