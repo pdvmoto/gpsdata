@@ -96,6 +96,8 @@ def f_process_data_from_zip ( n_file_id, s_logfilepath ):
   # insert the lines from the logs from 1 zipfile, refer to parent n_file_id
   # assume: no other logfiles in log-dir (tricky!)
 
+  n_lines_done = int ( 0 )  # needs initiation in case no file found
+
   # define the insert stmtn
   sql_ins_gps_line = """ INSERT INTO gps_line (
     gfil_id, line_nr,                                 dt
