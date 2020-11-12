@@ -76,6 +76,7 @@ drop sequence trip_seq;
 drop sequence gps_file_seq;
 
 drop table trip_point ;
+drop table trip_stop ;
 drop table trip ; 
 
 drop table gps_file ;
@@ -117,4 +118,31 @@ create table gps_line (
 -- notes: consider check+range on several fields.
 
 alter table gps_line add constraint gps_line_pk primary key ( gfil_id, line_nr ) using index ; 
+alter table gps_line add constraint gps_line_trp_fk foreign key ( gfil_id ) references trip ( id ) ; 
+
+
+create table trip (
+  id        number not null
+, trp_name  varchar2 ( 255) 
+, start_dt  date 
+);
+
+alter table trip add constraint trip_pk primary key ( id ) using index ;
+
+create index trip_name on trip ( trp_name ) ;
+
+
+-- consider this an IOT + 2ndary index on trp_id
+create table trip_point ( 
+  gfil_id       number not null
+, line_nr       number not null
+, trp_id        number not null
+) ;
+
+alter table trip_point add constraint trip_point_pk     primary key ( gfil_id, line_nr, trp_id ) using index ; 
+
+create index trip_point_trp_idx on trip_point ( trp_id, gfil_id, line_nr ) ;
+
+alter table trip_point add constraint trip_point_fk_trp foreign key ( trp_id ) references trip ( id ) ;
+alter table trip_point add constraint trip_point_fk_gln foreign key ( gfil_id, line_nr ) references gps_line ( gfil_id, line_nr ) ;
 

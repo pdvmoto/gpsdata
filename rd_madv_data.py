@@ -59,9 +59,70 @@ def f_prfx():
 # end of f_prfx, set sourcefile and timestamp
 
 
+def f_myadv_ins_trip ( s_trip ):
+
+  # use the trip-name to insert a record and return the trip_id
+
+  n_trip_id = int ( 1 ) 
+
+  print ( f_prfx(), " inserting record and generate id for trip: " , s_trip )  
+
+  s_fname    = os.path.basename ( s_trip )
+  s_dirpath  = os.path.abspath ( s_fname )
+  n_file_id  = int ( 1 )
+
+  print ( f_prfx(), " inserting trip with data from " , s_dirpath, s_fname )
+
+  sql_get_trip_id="""
+  select trip_seq.nextval from dual
+  """
+  cur = con.cursor()
+  cur.execute ( sql_get_trip_id )
+  for result in cur:
+    n_trip_id = int( result[0] )
+
+  # insert the record
+  s_sql_insert = """ insert into trip ( id, trp_name )
+    values ( :1, :2 )
+  """
+  l_ins_values = [ n_trip_id, s_trip ]
+
+  print ( f_prfx(), " f_myadv_ins_trip: about to insert: " , l_ins_values )
+  print ( f_prfx(), " " )
+
+  hit_enter = input ( f_prfx() + " about to insert trip.. hit enter to continue..." )
+
+  cur = con.cursor ()
+  cur.execute ( s_sql_insert, l_ins_values )
+
+  return n_trip_id 
+
+# end f_myadv_ins_trip, dont include commit .. 
+
+
+def f_myadv_nmea_file (  n_trip_id, s_nmeafile ):
+  
+  n_lines_done = int ( 0 ) 
+
+  # use this function to process the contents of 1 nmea file
+
+  # print ( f_prfx(), " f_myadv_nmea_file: abt to process trip/file: " , n_trip_id, "/",  s_nmeafile )
+
+  # open the csv-file. and loop over the lines, count, quite a bit of code..
+  
+
+  return n_lines_done
+
+# end of f_myadv_nmea_file
+
 print ( f_prfx(), ' ' ) 
 print ( f_prfx(), "--- Start Main ---- " ) 
 print ( f_prfx(), ' ' ) 
+
+n_tripcount = int ( 0 ) 
+n_filecount = int ( 0 ) 
+n_lines_p_trip  = int ( 0 ) 
+n_lines_total   = int ( 0 ) 
 
 # hardcoded locations.. and subdirs
 # trips start with a number..
@@ -69,12 +130,18 @@ print ( f_prfx(), ' ' )
 s_tripdir = str ( "/Users/pdvbv/Downloads/d447c196-bfda-4c1e-ba55-265d55b5e2c4" )
 s_trip_subdirs = str ( "./[0-9]*" ) 
 s_logdir_path = str ( "./20*_1" ) 
+s_nmea_mask = str ( "*nmea.log" ) 
+
+n_trip_id = int ( 0 ) 
 
 s_savecwd = str ( "." ) 
 
 s_savecwd = os.getcwd()
 
 os.chdir ( s_tripdir ) 
+
+
+con = cx_Oracle.connect('scott/tiger@127.0.0.1:1521/orclpdb1')
 
 
 print ( f_prfx(), " jumped to trip-directory: ", s_tripdir ) 
@@ -86,7 +153,14 @@ print ( f_prfx(), ' ' )
 for s_trip in sorted ( glob.glob ( s_trip_subdirs ) ): 
   print ( f_prfx(), " trip: ", s_trip, ", start processing trip found " )
 
+  n_tripcount = n_tripcount + 1 
+
   # strip the subdir to determine trip-name
+  # then insert the trip in the trip-tble, based trip-name
+  # HERE 
+  n_trip_id = f_myadv_ins_trip ( s_trip )   
+
+  n_lines_p_trip = int ( 0 ) 
 
   # process all zips or logs below the subdir
   os.chdir ( s_trip )
@@ -94,25 +168,34 @@ for s_trip in sorted ( glob.glob ( s_trip_subdirs ) ):
 
     # print ( f_prfx(), " logdir: ", s_logdir, " start    processing logs in dir" )
 
-    os.chdir ( s_logdir )  
+    # os.chdir ( s_logdir )  
 
-    for s_nmeafile in sorted ( glob.glob ( '*nmea.log' ) ) :
+    for s_nmeafile in sorted ( glob.glob ( s_logdir + "/" + s_nmea_mask ) ) :
 
       # print ( f_prfx(), " nmea: ", s_nmeafile ) 
-      
-      print ( f_prfx(), "process, file-dir + log [", s_logdir, "/", s_nmeafile , "]" )
+
+      n_filecount    = n_filecount + 1 
+      n_lines_p_trip = n_lines_p_trip + f_myadv_nmea_file (  n_trip_id, s_nmeafile )
+      n_lines_total  = n_lines_total  + n_lines_p_trip 
+
+      # print ( f_prfx(), "process, file-dir + log [", s_logdir, "/", s_nmeafile , "]" )
 
     # end for nmea files
 
     # back to parent dir.
-    os.chdir ( '..'  ) 
+    # os.chdir ( '..'  ) 
 
     # print ( f_prfx(), ' logdir: ', s_logdir, " finished processing logs in dir" )
 
-  # print ( f_prfx(), " trip: ", s_trip, " finished processing trip  " )
+  print ( f_prfx(), " trip: ", s_trip, " done, files/lines/total :"
+        , n_filecount, "/", n_lines_p_trip, "/", n_lines_total )
+  print ( f_prfx(), " " )
   
   # back to dir with all trips
   os.chdir ( s_tripdir ) 
+
+  # commit per trip
+  con.commit ()
 
 # end-for, loop over all trips
 
@@ -122,6 +205,12 @@ print ( f_prfx(), " finished processing all files in directory: ", s_tripdir )
 
 os.chdir ( s_savecwd ) 
 
+
+print ( f_prfx(), " " ) 
+print ( f_prfx(), " total trips   : ", n_tripcount ) 
+print ( f_prfx(), " total files   : ", n_filecount ) 
+print ( f_prfx(), " total records : ", n_recordcount ) 
+print ( f_prfx(), " " ) 
 print ( f_prfx(), " " ) 
 print ( f_prfx(), "--- Finished ---- " ) 
 print ( f_prfx(), " " ) 
