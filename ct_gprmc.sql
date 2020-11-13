@@ -79,8 +79,8 @@ drop table trip_point ;
 drop table trip_stop ;
 drop table trip ; 
 
-drop table gps_file ;
 drop table gps_line ;
+drop table gps_file ;
 
 create sequence trip_seq;
 create sequence gps_file_seq;
@@ -117,8 +117,9 @@ create table gps_line (
 -- notes: consider not-null on several fields to always have valid lon/lat
 -- notes: consider check+range on several fields.
 
-alter table gps_line add constraint gps_line_pk primary key ( gfil_id, line_nr ) using index ; 
-alter table gps_line add constraint gps_line_trp_fk foreign key ( gfil_id ) references trip ( id ) ; 
+alter table gps_line add constraint gps_line_pk     primary key ( gfil_id, line_nr ) using index ; 
+
+alter table gps_line add constraint gps_line_trp_fk foreign key ( gfil_id ) references gps_file ( id ) ; 
 
 
 create table trip (
@@ -143,6 +144,6 @@ alter table trip_point add constraint trip_point_pk     primary key ( gfil_id, l
 
 create index trip_point_trp_idx on trip_point ( trp_id, gfil_id, line_nr ) ;
 
-alter table trip_point add constraint trip_point_fk_trp foreign key ( trp_id ) references trip ( id ) ;
+alter table trip_point add constraint trip_point_fk_trp foreign key ( trp_id )           references trip ( id ) ;
 alter table trip_point add constraint trip_point_fk_gln foreign key ( gfil_id, line_nr ) references gps_line ( gfil_id, line_nr ) ;
 

@@ -40,6 +40,19 @@ from datetime import datetime, date, time, timezone
 # estimated nr of lines and MB ? 
 
 
+# todo:
+#  - consider storing absolute path, needs longer path-column
+#  - consider removing hardcoded data-formats like YYYYMMDD..
+#  - add checksum to gps-record? 
+#  - divide over multiple sourcefiles
+#  - use "struct" to read, contain, verify an RMC record
+#  - try-catch error handline 
+
+
+
+
+# ---- some debug preparation ---- 
+
 # take the filename, to use as prefix for print stmnts
 pyfile = os.path.basename(__file__)
 arg0 = sys.argv[0]
@@ -65,17 +78,16 @@ def f_myadv_ins_trip ( s_trip ):
 
   n_trip_id = int ( 1 ) 
 
-  print ( f_prfx(), " inserting record and generate id for trip: " , s_trip )  
+  # print ( f_prfx(), " f_myadv_ins_trip: inserting, generate id for trip: " , s_trip )  
 
   s_fname    = os.path.basename ( s_trip )
   s_dirpath  = os.path.abspath ( s_fname )
   n_file_id  = int ( 1 )
 
-  print ( f_prfx(), " inserting trip with data from " , s_dirpath, s_fname )
+  # print ( f_prfx(), " f_myadv_ins_trip: inserting, triprecord with data from " , s_dirpath, s_fname )
 
-  sql_get_trip_id="""
-  select trip_seq.nextval from dual
-  """
+  sql_get_trip_id=""" select trip_seq.nextval from dual """
+
   cur = con.cursor()
   cur.execute ( sql_get_trip_id )
   for result in cur:
@@ -83,14 +95,14 @@ def f_myadv_ins_trip ( s_trip ):
 
   # insert the record
   s_sql_insert = """ insert into trip ( id, trp_name )
-    values ( :1, :2 )
-  """
-  l_ins_values = [ n_trip_id, s_trip ]
+                               values ( :1,       :2 ) """
+
+  l_ins_values = [               n_trip_id,   s_fname ]
 
   print ( f_prfx(), " f_myadv_ins_trip: about to insert: " , l_ins_values )
   print ( f_prfx(), " " )
 
-  hit_enter = input ( f_prfx() + " about to insert trip.. hit enter to continue..." )
+  # hit_enter = input ( f_prfx() + " f_ins_myadv_trip: about to insert trip, hit enter to continue..." )
 
   cur = con.cursor ()
   cur.execute ( s_sql_insert, l_ins_values )
@@ -100,16 +112,155 @@ def f_myadv_ins_trip ( s_trip ):
 # end f_myadv_ins_trip, dont include commit .. 
 
 
+def f_myadv_ins_gps_file_rec ( fname ):
+
+  # create a record for a GPS-file (RMC data) to be read, 
+  # the gps_file is only an administration of incoming data, 
+  # the details, points, will go into gps_line (see also ct_gprmc.sql)
+  #
+  # note that the file is not directly related to the trip, 
+  # the relation is : gps_file -< gps_line -< trip_point  >- trip
+  # a trip has trip-points, and trip-points correspond to gps_lines, 
+  # thus the raw data remains close to the file+line, and is linked to trips
+
+  s_fname    = os.path.basename ( fname )
+  s_dirpath  = os.path.abspath ( fname )
+  n_file_id  = int ( 1 )
+
+  # print ( f_prfx(), " f_ins_gps_file_rec: inserting file " , fname )
+
+  # get the seq value for n_file_id
+
+  sql_getid1=""" select gps_file_seq.nextval from dual """
+
+  cur = con.cursor()
+  cur.execute ( sql_getid1 )
+  for result in cur:
+    n_file_id = int( result[0] )
+
+  # insert the record
+  s_sql_insert = """ insert into gps_file ( id,   fname,     fpath, dt_loaded )
+                                   values ( :1,      :2,        :3,   sysdate ) """
+  l_ins_values =                   [ n_file_id, s_fname,     fname ]
+
+  # print ( f_prfx(), " f_ins_gps_file: about to insert: " , l_ins_values )
+
+  cur = con.cursor ()
+  cur.execute ( s_sql_insert, l_ins_values )
+
+  return n_file_id
+
+# end f_myadv_ins_gps_file_rec
+
+
 def f_myadv_nmea_file (  n_trip_id, s_nmeafile ):
   
-  n_lines_done = int ( 0 ) 
-
   # use this function to process the contents of 1 nmea file
+
+  n_rowlen    = int ( 0 )  # length of an RMC is ...
+
+  # some variables, GGRMC format
+  n_fline     = int ( 0 )
+  s_sentence  = str ( '$_____' )
+  s_hmss      = str ( '000000.00' ) # time, UTC
+  c_pos_stat  = str ( " " )     # validity of signal, A=ok, V=invalid
+  f_lat       = float ( 0 )
+  f_lon       = float ( 0 )
+  c_lat_dir   = str ( ' ' )     # N or S (S=negative)
+  c_lon_dir   = str ( ' ' )     # E or W (W=negative)
+  f_spd       = float ( 0 )     # speed, knts
+  f_trck      = float ( 0 )     # track, true, degrees
+  s_date      = str ( '010170' ) # dmy,
+  f_magvar    = float ( 0 )     # magnetic var, degrees
+  c_vardir    = str ( ' ' )     # magnetic var, diretion, E/W
+  c_mode      = str ( ' ' )     # mode indicator, Autonomous/Differential/Estimate/Manual/Notvalid
+
+  # define the insert stmtn, 13 bind vars: 3+5+5, and a hardcoded format
+  sql_ins_gps_line = """ INSERT INTO gps_line (
+    gfil_id, line_nr,                                 dt
+  , lat, lat_dir, lon, lon_dir, pos_status
+  , speed_kn, track_true, mag_var, var_dir, mode_ind )
+  VALUES ( :1,    :2, to_date ( :3, 'YYYYMMDD HH24MISS')
+  ,       :4,      :5,  :6 ,      :7,         :8
+  ,      :9,         :10,     :11,     :12,      :13 ) """
+
+
+  n_lines_done = int ( 0 ) 
+  n_lines_skipped = int ( 0 ) 
+  n_file_id = int ( 0 ) 
 
   # print ( f_prfx(), " f_myadv_nmea_file: abt to process trip/file: " , n_trip_id, "/",  s_nmeafile )
 
+  # create the parent record for the file, 
+  n_file_id = f_myadv_ins_gps_file_rec ( s_nmeafile ) 
+
   # open the csv-file. and loop over the lines, count, quite a bit of code..
-  
+ 
+  with open ( s_nmeafile ) as csvfile:
+    reader = csv.reader ( csvfile ) 
+    for row in reader:
+
+      n_rowlen = len( row ) 
+
+      s_sentence  = row[0]
+      if ( s_sentence == "$GPRMC" and n_rowlen > 12 ):
+
+        # only count RMCs
+        n_lines_done = n_lines_done + 1
+
+        # print ( f_prfx(), " f_myadv_nmea_file: line ", n_lines_done, " Found an RMC, len=", n_rowlen )
+
+        s_hmss      = row[1]
+        c_pos_stat  = row[2]
+        f_lat       = float ( row[3] + "0" )
+        f_lon       = float ( row[5] + "0" )
+        c_lat_dir   = row[4]
+        c_lon_dir   = row[6]
+        f_spd       = float ( row[ 7] + "0" )     # speed, knts
+        f_trck      = float ( row[ 8] + "0" )     # track, true, degrees
+        s_date      = row[9]                      # dmy,
+        f_magvar    = float ( row[10] + "0" )     # magnetic var, degrees
+        c_vardir    = str ( row[11]  )            # magnetic var, diretion, E/W
+        c_mode      = str ( row[12][0:0]  )       # mode indicator, Autonomous/Diff/Est/Manual/Notval
+        c_chksum    = str ( row[12][2:3]  )       # checksum. later.
+
+        # now put the data in correct format and values.
+
+        # date + time in yymmdd hhmiss
+        s_oradt = "20" + s_date[4:6] + s_date [2:4] + s_date[0:2] + " " + s_hmss[0:6]
+
+        # lat and long into decimal degrees
+        f_lat = round ( math.trunc ( f_lat / 100.0 )
+                        + ( ( f_lat / 100.0 ) % int(1) ) * 100 / 60
+                      , 8 )
+
+        f_lon = round ( math.trunc ( f_lon / 100.0 )
+                        + ( ( f_lon / 100.0 ) % int(1) ) * 100 / 60
+                      , 8 )
+
+        # print ( f_prfx(), " f_myadv_nmea_file: some data: " 
+        #  ,  s_oradt, f_lat, c_lat_dir, f_lon, c_lon_dir, f_spd, f_trck )
+
+        # insert into, 3+5+5
+        ins_values = [ n_file_id, n_lines_done, s_oradt
+           , f_lat, c_lat_dir, f_lon, c_lon_dir, c_pos_stat
+           , f_spd, f_trck, f_magvar, c_vardir, c_mode ]
+
+        cur = con.cursor ()
+        cur.execute  ( sql_ins_gps_line,  ins_values )
+
+      else:
+ 
+        # print ( f_prfx(), "f_myadv_nmea_file :", s_sentence, " is not an RMC" )
+        n_lines_skipped = n_lines_skipped + 1 
+
+      # end-if, not an RMC line
+
+      # print ( f_prfx(), "f_myadv_nmea_file done." )
+
+    # end for row, reader 
+
+  # end with
 
   return n_lines_done
 
@@ -120,9 +271,10 @@ print ( f_prfx(), "--- Start Main ---- " )
 print ( f_prfx(), ' ' ) 
 
 n_tripcount = int ( 0 ) 
-n_filecount = int ( 0 ) 
-n_lines_p_trip  = int ( 0 ) 
+n_files_total   = int ( 0 ) 
 n_lines_total   = int ( 0 ) 
+n_files_p_trip  = int ( 0 )
+n_lines_p_trip  = int ( 0 ) 
 
 # hardcoded locations.. and subdirs
 # trips start with a number..
@@ -148,25 +300,28 @@ print ( f_prfx(), " jumped to trip-directory: ", s_tripdir )
 print ( f_prfx(), ' ' ) 
 
 
-# list the trips .. 
+# loop over the trips .. 
 
 for s_trip in sorted ( glob.glob ( s_trip_subdirs ) ): 
-  print ( f_prfx(), " trip: ", s_trip, ", start processing trip found " )
+
+  # print ( f_prfx(), " trip: ", s_trip, ", trip found, start processing " )
 
   n_tripcount = n_tripcount + 1 
 
   # strip the subdir to determine trip-name
   # then insert the trip in the trip-tble, based trip-name
-  # HERE 
+  # 
+  # Insert Trip HERE 
   n_trip_id = f_myadv_ins_trip ( s_trip )   
 
   n_lines_p_trip = int ( 0 ) 
+  n_files_p_trip = int ( 0 ) 
 
-  # process all zips or logs below the subdir
+  # process all "zips" or logs below the subdir
   os.chdir ( s_trip )
   for s_logdir in sorted ( glob.glob ( s_logdir_path ) ):
 
-    # print ( f_prfx(), " logdir: ", s_logdir, " start    processing logs in dir" )
+    # print ( f_prfx(), " logdir: ", s_logdir, " start processing logs in dir" )
 
     # os.chdir ( s_logdir )  
 
@@ -174,21 +329,24 @@ for s_trip in sorted ( glob.glob ( s_trip_subdirs ) ):
 
       # print ( f_prfx(), " nmea: ", s_nmeafile ) 
 
-      n_filecount    = n_filecount + 1 
+      # Process files and lines HERE
+      n_files_p_trip = n_files_p_trip + 1 
       n_lines_p_trip = n_lines_p_trip + f_myadv_nmea_file (  n_trip_id, s_nmeafile )
-      n_lines_total  = n_lines_total  + n_lines_p_trip 
 
       # print ( f_prfx(), "process, file-dir + log [", s_logdir, "/", s_nmeafile , "]" )
 
     # end for nmea files
+   
+    n_lines_total = n_lines_total + n_lines_p_trip
+    n_files_total = n_files_total + n_files_p_trip
 
     # back to parent dir.
     # os.chdir ( '..'  ) 
 
     # print ( f_prfx(), ' logdir: ', s_logdir, " finished processing logs in dir" )
 
-  print ( f_prfx(), " trip: ", s_trip, " done, files/lines/total :"
-        , n_filecount, "/", n_lines_p_trip, "/", n_lines_total )
+  print ( f_prfx(), " trip: ", s_trip, " done, files/lines:"
+        , n_files_p_trip, "/", n_lines_p_trip, " totals:", n_files_total, "/", n_lines_total )
   print ( f_prfx(), " " )
   
   # back to dir with all trips
@@ -201,6 +359,7 @@ for s_trip in sorted ( glob.glob ( s_trip_subdirs ) ):
 
 print ( f_prfx(), " finished processing all files in directory: ", s_tripdir ) 
 
+
 # at the end, renturn to thew original directory
 
 os.chdir ( s_savecwd ) 
@@ -208,8 +367,8 @@ os.chdir ( s_savecwd )
 
 print ( f_prfx(), " " ) 
 print ( f_prfx(), " total trips   : ", n_tripcount ) 
-print ( f_prfx(), " total files   : ", n_filecount ) 
-print ( f_prfx(), " total records : ", n_recordcount ) 
+print ( f_prfx(), " total files   : ", n_files_total ) 
+print ( f_prfx(), " total records : ", n_lines_total ) 
 print ( f_prfx(), " " ) 
 print ( f_prfx(), " " ) 
 print ( f_prfx(), "--- Finished ---- " ) 
