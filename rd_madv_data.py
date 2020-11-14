@@ -21,7 +21,7 @@ from datetime import datetime, date, time, timezone
 # 2. list the subdirs in order of number (name),
 # 2.1 chop off nr and name, and use the data for trip-records
 # 2.2 create trip record  (check for duplicate trip-nr or name ? ) 
-# function:  madv_ins_trip ( nr, name ), return the trip_id from oracle.
+# function:  f_madv_ins_trip ( name ), return the trip_id from oracle.
 
 # 2.3 go into trip-dir, list the subdirs again... each subdir is a file
 # 2.3.1 go into first dir, use dirname as filename for data to read
@@ -262,6 +262,14 @@ def f_myadv_nmea_file (  n_trip_id, s_nmeafile ):
 
   # end with
 
+  # link the lines to the trip via trip_points
+  sql_ins_points = """ insert into trip_point select gfil_id, line_nr, :1 as trp_id
+                       from gps_line where gfil_id = :2 """ 
+  l_points = [ n_trip_id, n_file_id ] 
+
+  cur = con.cursor ()
+  cur.execute  ( sql_ins_points,  l_points )
+  
   return n_lines_done
 
 # end of f_myadv_nmea_file
@@ -279,14 +287,13 @@ n_lines_p_trip  = int ( 0 )
 # hardcoded locations.. and subdirs
 # trips start with a number..
 
-s_tripdir = str ( "/Users/pdvbv/Downloads/d447c196-bfda-4c1e-ba55-265d55b5e2c4" )
+# s_tripdir = str ( "/Users/pdvbv/Downloads/d447c196-bfda-4c1e-ba55-265d55b5e2c4" )
+s_tripdir = str ( "/Users/pdvbv/data/binsql/gpsdata/testdata" )
 s_trip_subdirs = str ( "./[0-9]*" ) 
 s_logdir_path = str ( "./20*_1" ) 
 s_nmea_mask = str ( "*nmea.log" ) 
 
 n_trip_id = int ( 0 ) 
-
-s_savecwd = str ( "." ) 
 
 s_savecwd = os.getcwd()
 
@@ -336,14 +343,16 @@ for s_trip in sorted ( glob.glob ( s_trip_subdirs ) ):
       # print ( f_prfx(), "process, file-dir + log [", s_logdir, "/", s_nmeafile , "]" )
 
     # end for nmea files
-   
-    n_lines_total = n_lines_total + n_lines_p_trip
-    n_files_total = n_files_total + n_files_p_trip
 
     # back to parent dir.
     # os.chdir ( '..'  ) 
 
     # print ( f_prfx(), ' logdir: ', s_logdir, " finished processing logs in dir" )
+
+  # end of for logdir loop
+
+  n_lines_total = n_lines_total + n_lines_p_trip
+  n_files_total = n_files_total + n_files_p_trip
 
   print ( f_prfx(), " trip: ", s_trip, " done, files/lines:"
         , n_files_p_trip, "/", n_lines_p_trip, " totals:", n_files_total, "/", n_lines_total )

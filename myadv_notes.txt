@@ -5,7 +5,7 @@ Goal is to have data on a map. Lines and stop-points on a map.
 source data : the *.log files or data in a table (ora or pg)
 output: a map to display in browser.
 
-datamodel: 
+datamodel:  (actual docu in the sql-file!)
     load-table: load the log files in stageing tables, 
     route-table: order/parition by Date (and time), select-into
     for large volumes: convert by sqlldr into load-table, and exch-part
@@ -32,6 +32,28 @@ implement
  - create master route table, possibly partition by yyyymmdd-ddd-sequece
  - generate google line elemets, per day? from route-table
  - beautify: use stops, time-gaps etc.. to determine more details.
+
+List of sources:
+ - consider 1 python-program per source, but some are shared components.
+ - myadv-Stoyan, datadump: contains subdirs per trip, subdir=triptitle, program works, takes abt 2hr to load.
+ - my-adv from phone : zipfiles, and need to link each file to zip: consider creating subdirs per trip as Stoyan did
+ - Ramblr: GPX, 1 file per trip. Filename= triptitle
+ - Endomondo: 1 file per trip, filename=triptitle
+
+ - consider a "struct" to hold GPRMC records (including chksum, including read-trick)
+
+
+notes: 
+ - Accuracy: a 1 min interval is too long, 10 sec interval is about right.
+ - estimate: later use distance, speed and heading to determine if a point is relevant. 
+   when going "straight, a lot of poitns can be skipped
+ - consider adding metadata or notes to file: where-from, what tools etc.. 
+ - question: should we link file-trip or point-trip... 
+    using point-trip allows (future sources) for 1 file to contain multiple trips
+ - what constitutes a stop? how-long, and what-distnaces.. (e.g. see the jumps when measurements are inside buildings)
+ - not al points have a dt-measured, and thus depend on file-name or other data to determine DT.
+ - write a file-checker: check for valid NMEA records via checksum and value-limits, spot problems
+ - need pl-sql or other code to generate KML per trip
 
 */ 
 
