@@ -10,9 +10,13 @@ import cx_Oracle
 from datetime import datetime, date, time, timezone
 
 
-
 # purpose: 
+#
 # - read all trips from my-adventure subdirs, into trip, gps_file and gps_line tables.
+#
+# history
+#   2020-Nov-10, pdv, created to store records, experiment wiht py+gps data
+#
 
 
 # structure...
@@ -33,22 +37,24 @@ from datetime import datetime, date, time, timezone
 #       function madv_ins_gps_lines ( trip, file_id, nmea_file_name )
 # 2.3.4 use pygpx to process nmea records (for trip and file) into gps_line and trp_point
 # 2.3.5 consider moving or marking each file after processing
-# 2.3.6 commit after each file
+# 2.3.6 commit after each file or each trip => trip
 # 
+# 3. close down, show some statistics
 # the loops/tructures above should process all files..  
 # how many seconds per trip ? 
 # estimated nr of lines and MB ? 
 
 
 # todo:
+#  - measure time, report files/sec and line/sec, to help monitor and improve speed, check
 #  - consider storing absolute path, needs longer path-column
 #  - consider removing hardcoded data-formats like YYYYMMDD..
 #  - add checksum to gps-record? 
 #  - divide over multiple sourcefiles
 #  - use "struct" to read, contain, verify an RMC record
 #  - try-catch error handline 
-
-
+#  - When program and data are ok: load into separate schema for KEEP.
+#  - add start + stop time to trip (speciic for my-adv)
 
 
 # ---- some debug preparation ---- 
@@ -61,8 +67,7 @@ prefix=pyfile + ' '
 def f_prfx():
   # set a prefix for debug-output, sourcefile + timestamp
 
-  # s_prefix = pyfile + ': '
-  s_timessff = str ( datetime.now() )[11:]
+  s_timessff = str ( datetime.now() )[11:23]
   s_prefix = pyfile + ' ' + s_timessff + ': '
 
   # print ( prfx, ' in function f_prfx: ' , s_prefix )
@@ -191,6 +196,9 @@ def f_myadv_nmea_file (  n_trip_id, s_nmeafile ):
 
   # print ( f_prfx(), " f_myadv_nmea_file: abt to process trip/file: " , n_trip_id, "/",  s_nmeafile )
 
+  # create cursor once.., consider closing cursor
+  cur = con.cursor()
+
   # create the parent record for the file, 
   n_file_id = f_myadv_ins_gps_file_rec ( s_nmeafile ) 
 
@@ -246,7 +254,7 @@ def f_myadv_nmea_file (  n_trip_id, s_nmeafile ):
            , f_lat, c_lat_dir, f_lon, c_lon_dir, c_pos_stat
            , f_spd, f_trck, f_magvar, c_vardir, c_mode ]
 
-        cur = con.cursor ()
+        # cur = con.cursor ()
         cur.execute  ( sql_ins_gps_line,  ins_values )
 
       else:
@@ -267,7 +275,7 @@ def f_myadv_nmea_file (  n_trip_id, s_nmeafile ):
                        from gps_line where gfil_id = :2 """ 
   l_points = [ n_trip_id, n_file_id ] 
 
-  cur = con.cursor ()
+  # cur = con.cursor ()
   cur.execute  ( sql_ins_points,  l_points )
   
   return n_lines_done
@@ -314,6 +322,7 @@ for s_trip in sorted ( glob.glob ( s_trip_subdirs ) ):
   # print ( f_prfx(), " trip: ", s_trip, ", trip found, start processing " )
 
   n_tripcount = n_tripcount + 1 
+  dt_trip_start = datetime.now()
 
   # strip the subdir to determine trip-name
   # then insert the trip in the trip-tble, based trip-name
@@ -354,8 +363,14 @@ for s_trip in sorted ( glob.glob ( s_trip_subdirs ) ):
   n_lines_total = n_lines_total + n_lines_p_trip
   n_files_total = n_files_total + n_files_p_trip
 
+  dt_trip_end = datetime.now()
+
+  n_trip_duration_sec =  (dt_trip_end - dt_trip_start).microseconds  / 1000 
+  
   print ( f_prfx(), " trip: ", s_trip, " done, files/lines:"
         , n_files_p_trip, "/", n_lines_p_trip, " totals:", n_files_total, "/", n_lines_total )
+  print ( f_prfx(), " trip: ", s_trip, " took ", n_trip_duration_sec
+         , "sec and did ", round ( n_lines_p_trip / n_trip_duration_sec, 3), " lines/sec" ) 
   print ( f_prfx(), " " )
   
   # back to dir with all trips

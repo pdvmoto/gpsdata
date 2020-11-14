@@ -123,9 +123,12 @@ alter table gps_line add constraint gps_line_trp_fk foreign key ( gfil_id ) refe
 
 
 create table trip (
-  id        number not null
-, trp_name  varchar2 ( 255) 
-, start_dt  date 
+  id            number not null
+, trp_name      varchar2 ( 255) 
+, start_dt      date 
+, created_dt    date
+, created_by    varchar2 ( 32 ) 
+, notes_txt     varchar2 ( 1024 ) 
 );
 
 alter table trip add constraint trip_pk primary key ( id ) using index ;
