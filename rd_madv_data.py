@@ -296,7 +296,7 @@ n_lines_p_trip  = int ( 0 )
 # trips start with a number..
 
 # s_tripdir = str ( "/Users/pdvbv/Downloads/d447c196-bfda-4c1e-ba55-265d55b5e2c4" )
-s_tripdir = str ( "/Users/pdvbv/data/binsql/gpsdata/testdata" )
+s_tripdir = str ( "/Users/pdvbv/data/myadv_logs/tests" )
 s_trip_subdirs = str ( "./[0-9]*" ) 
 s_logdir_path = str ( "./20*_1" ) 
 s_nmea_mask = str ( "*nmea.log" ) 
