@@ -32,7 +32,6 @@
 import os
 import sys
 import glob
-# import csv
 import math
 import cx_Oracle
 import gpxpy
@@ -47,6 +46,7 @@ pyfile = os.path.basename(__file__)
  
 # s_tripdir = str ( "/Users/pdvbv/Downloads/d447c196-bfda-4c1e-ba55-265d55b5e2c4" )
 s_datadir   = str ( "/Users/pdvbv/data/myadv_logs/test_rk/" )
+#s_datadir   = str ( "/Users/pdvbv/Downloads/tmp_runkeeper/errors/" ) 
 s_gpx_mask  = str ( "20*.gpx" )
 
 
@@ -97,7 +97,7 @@ def f_ins_trip ( s_trip ):
 
   l_ins_values = [               n_trip_id,   s_fname,    pyfile  ]
 
-  print ( f_prfx(), " f_ins_trip: about to insert: " , l_ins_values )
+  # print ( f_prfx(), " f_ins_trip: about to insert: " , l_ins_values )
   print ( f_prfx(), " " )
 
   # hit_enter = input ( f_prfx() + " f_ins_trip: about to insert trip, hit enter to continue..." )
@@ -122,8 +122,6 @@ def f_ins_gps_file_rec ( fname ):
   # thus the raw data remains close to the file+line, and is linked to trips
   #
   # consider this for separate sourcefile.py
-  # consider: comments and more at file
-
   s_fname    = os.path.basename ( fname )
   s_dirpath  = os.path.abspath ( fname )
   n_file_id  = int ( 1 )
@@ -167,12 +165,12 @@ def f_runk_do_gpx ( n_trip_id , gpxfile ):
 
   # define the sql-stmnt as constant, consider putting it outside
   sql_ins_line = """ insert into gps_line 
-           ( gfil_id, line_nr, lat, lon,                dt )
-    values (      :1,      :2,  :3,  :4, to_date ( :5,  'YYYY-MM-DD HH24:MI:SS' ) ) """
+           ( gfil_id, line_nr, lat, lon,           dt,                             ele )
+    values (      :1,      :2,  :3,  :4, to_date ( :5,  'YYYY-MM-DD HH24:MI:SS' ),  :6 ) """
 
   s_ymdfmt = str ( "YYYY-MM-DD HH24:MI:SS" )
 
-  print ( f_prfx(), " f_runk_do_gpx file ", gpxfile )
+  # print ( f_prfx(), " runk_do, gpx file ", gpxfile )
   n_tracks_done   = int ( 0 )
   n_segments_done = int ( 0 )
   n_points_done   = int ( 0 )
@@ -190,8 +188,12 @@ def f_runk_do_gpx ( n_trip_id , gpxfile ):
     print ( " " )
     # hit_enter = input ( f_prfx() + " runk_do, abt to do track:" + track.name + " hit enter..."  )
 
+    n_tracks_done = n_tracks_done + 1 
+
     for segment in track.segments:
     
+      n_segments_done = n_segments_done + 1 
+
       for point in segment.points:
 
         s_dt1 = str ( point.time )   # the ora-dt is a smaller str, ..
@@ -202,7 +204,8 @@ def f_runk_do_gpx ( n_trip_id , gpxfile ):
         # , n_points_done, point.latitude, point.longitude
         # , point.elevation, point.time , s_dt1, "[" + s_oradt + "]" ) 
 
-        l_ins_values = [  n_file_id, n_points_done, point.latitude, point.longitude , s_oradt  ]
+        l_ins_values = [  n_file_id, n_points_done, point.latitude, point.longitude 
+                     , s_oradt, point.elevation  ]
 
         # print ( f_prfx(), " runk_do, sql is: ", sql_ins_line )
         # print ( f_prfx(), " runk_do, abt to insert: ", l_ins_values )
@@ -226,9 +229,13 @@ def f_runk_do_gpx ( n_trip_id , gpxfile ):
   
   # mention time
   dt_file_end = datetime.now () 
-  n_file_dur_sec = ( dt_file_end - dt_file_start).microseconds / 1000000
+  n_file_dur_sec = ( dt_file_end - dt_file_start).microseconds / 100000
 
-  print ( f_prfx(), "runk_do, points, duration: ", n_points_done, n_file_dur_sec )  
+  print ( f_prfx(), "runk_do, file     :", gpxfile ) 
+  print ( f_prfx(), "runk_do, tracks   :", n_tracks_done ) 
+  print ( f_prfx(), "runk_do, segments :", n_segments_done ) 
+  print ( f_prfx(), "runk_do, points   :", n_points_done ) 
+  print ( f_prfx(), "runk_do, duration :", n_file_dur_sec )  
 
   return n_points_done
 
@@ -287,12 +294,12 @@ for gpxfile in sorted ( glob.glob ( s_gpx_mask ) ) :
   n_points_total = n_points_total + n_points_p_file
 
   dt_end_trip = datetime.now() 
-  n_duration_trip_sec =  ( dt_end_trip - dt_start_trip ).microseconds / 1000000 
+  n_duration_trip_sec =  ( dt_end_trip - dt_start_trip ).microseconds / 100000 
 
   print ( " " )
   
   # print ( f_prfx(), " trip start, end: ", dt_start_trip, dt_end_trip )
-  print ( f_prfx(), " trip id, file  : ", n_trip_id, gpxfile , "took "
+  print ( f_prfx(), " trip id, file  : ", n_trip_id, gpxfile , "; took "
         , n_duration_trip_sec, " sec.")
   print ( f_prfx(), " trip points    : ", n_points_p_file, " at "
         , round ( n_points_p_file / n_duration_trip_sec, 2 ), " pnts/sec." ) 
@@ -311,10 +318,15 @@ os.chdir ( s_savecwd )
 
 dt_end_total = datetime.now() 
 
-n_duration_sec = (dt_end_total - dt_start_total).microseconds  / float ( 1000000 )
+dt_timediff = (dt_end_total - dt_start_total)
+n_duration_sec = dt_timediff.microseconds  / float ( 100000 )
 
 print ( f_prfx(), " " )
-print ( f_prfx(), " duration sec: ", n_duration_sec ) 
+print ( f_prfx(), " trips/files  : ", n_trips_total )
+print ( f_prfx(), " points total : ", n_points_total )
+
+print ( f_prfx(), "         from : ", dt_start_total, " to: ", dt_end_total )
+print ( f_prfx(), " duration sec : ", n_duration_sec ) 
 print ( f_prfx(), " " )
 print ( f_prfx(), " -------- the end ------- " ) 
 

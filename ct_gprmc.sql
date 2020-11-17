@@ -100,8 +100,9 @@ create table gps_line (
 , line_nr       number          not null 
 , dt         date           -- date from line-info, if null chk file earliest/ or dt
 , lat        number         -- latitude, degrees, decimal, S=negative
-, lat_dir    varchar2(1)    -- direction, check: N or S
 , lon        number         -- longitude, degrees, decimal, W=Negative
+, ele        number         -- elevation (meters above ?)
+, lat_dir    varchar2(1)    -- direction, check: N or S
 , lon_dir    varchar2(1)    -- direction, check E or W
 , pos_status varchar2(1)    -- check : A=ok or V=invalid
 , speed_kn   number         -- grondspeed, Knots
@@ -109,7 +110,7 @@ create table gps_line (
 , mag_var    number         -- check >= 0
 , var_dir    varchar2(1)    -- check E=subtract from true W=add to true
 , mode_ind   varchar2(1)    -- check: Auto, Diff, Est, Manual, Notvalid
-, chksum     varchar2(2)    -- checksum, see GGRMC spec, bitwise and, I think
+, nmea_chksum varchar2(2)   -- checksum, see GGRMC spec, bitwise and, I think
 ) ; 
 
 -- notes: consider timestamp for more precision ?

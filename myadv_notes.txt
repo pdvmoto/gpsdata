@@ -33,12 +33,20 @@ implement
  - generate google line elemets, per day? from route-table
  - beautify: use stops, time-gaps etc.. to determine more details.
 
+todo:
+ - add ele(vation) to gps-line
+ - store speed in km/h instead of kt.
+ - re-arrange order of columns : lon, lat, ele, then the rest.
+ - measuring time during inserts.. doesnt work well ??
+
 List of sources:
  - consider 1 python-program per source, but some are shared components.
  - myadv-Stoyan, datadump: contains subdirs per trip, subdir=triptitle, program works, takes abt 2hr to load.
  - my-adv from phone : zipfiles, and need to link each file to zip: consider creating subdirs per trip as Stoyan did
  - Ramblr: GPX, 1 file per trip. Filename= triptitle, any woy to get complete arcive ?
  - Endomondo: 1 file per trip, filename=triptitle, better: TCX from Downloade zipfile
+ - runkeeper: 1 gpx per activity, so trip = file ( working ) 
+ - sportstracker: check the gpx files
 
  - consider a "struct" to hold GPRMC records (including chksum, including read-trick)
 
