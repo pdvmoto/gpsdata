@@ -1,13 +1,15 @@
 # import ggps
 
 import xml.etree.ElementTree as ET
+import json 
+
 
 # Parsing an existing TCX file:
 # -------------------------
 
 # s_gpx_fname = str ( "20130330_040250.gpx" ) 
 # s_tcx_fname = str ( "test_end/2012-07-29 10:20:33.0.tcx" ) 
-s_tcx_fname = str ( "test_end/first.tcx" ) 
+s_tcx_fname = str ( "testend.json" ) 
 # s_gpx_fname = str ( "pdv_moto_801403.gpx" )                   
 
 
@@ -36,34 +38,83 @@ s_tcx_fname = str ( "test_end/first.tcx" )
 # hit_enter = input ( "rdtcx.py: inspect l_trackpoint [0], press enter to continue" )
 
 
-print ( " ------ start xml ------ " )
+print ( " ------ start json ------ " )
 
-tree = ET.parse( s_tcx_fname )
-root = tree.getroot()
-print ( dir ( tree ) ) 
+# tree = ET.parse( s_tcx_fname )
 
-print ( dir ( root ) ) 
+fl_json = open ( s_tcx_fname )
+data_json = json.load( fl_json ) 
 
-print ( root.items() ) 
-print ( root.iter('trainingcenterdatabase') ) 
+print ( dir ( data_json ) ) 
+print ( " " ) 
+hit_enter = input ( "rdtcx.py: inspect dir data_json , hit enter.." ) 
+print ( " " ) 
 
+print ( " " ) 
+print ( repr ( data_json ) ) 
+print ( " " ) 
+hit_enter = input ( "rdtcx.py: inspect repr data_json, hit enter.." ) 
 
-for level1 in root:
+print ( " " ) 
+print ( "rdctx.py: length: ", len(data_json )  )
+print ( " " ) 
+hit_enter = input ( "rdtcx.py: length  data_json, hit enter.." ) 
+print ( " " ) 
+
+for js_item  in data_json:
+  # print ( " " )
+  #  print ( " content:" )
+  # print ( "rdtcx.py: json_item :" , js_item )
   print ( " " )
-  print ( " level 1 tag, attrib:" )
-  print ( "tag, atrib: ", level1.tag, level1.attrib )
+  print ( " keys:" )
+  print ( "rdtcx.py: json_item keys :" , js_item.keys() )
+  s_key = js_item.keys() 
+  print ( "rdtcx.py: json_item s_key :" , s_key ) 
+  print ( "rdtcx.py: json_item values :" , js_item.values() )
   print ( " " )
-  print ( dir(level1) )
-  print ( dir(level1.attrib) )
-  print ( "keys: ", level1.attrib.keys() )
-  print ( "values: ", level1.attrib.values() )
-  print ( "items: ", level1.attrib.items )
+  print ( " dir: " )
+  # print ( dir ( js_item ) ) 
+  print ( " " )
 
-
-  hit_enter = input ( "rdtcx.py: inspect level1 , hit enter.." ) 
+  hit_enter = input ( "rdtcx.py: inspect js_item , hit enter.." ) 
     
+  for level1 in  js_item.values():
 
+    print ( "  level1: " , level1 ) 
+    print ( "  level1:  level1-dir:",   dir ( level1 ) )
+    print ( "  level1: level1-repr:",  repr ( level1 ) )
+    print ( "  level1,        type:",  type ( level1 ) )
 
+    if isinstance ( level1, list ):
+      for level2 in level1:
+        print ( "    level2: ", level2 )
+        print ( "    level2, type: ", type ( level2 ) )
+        if isinstance ( level2, list ):
+          for level3 in level2:
+            s_l3_key = str ( level3.keys() ) 
+            print ( "      level3: type:", type ( level3 ), ", key:", s_l3_key, ", value: ", level3,   )
+            if ( s_l3_key == "altitude" ):
+                print ( "      level3, altitude found:", level3 )
+
+      print ( " " )
+      hit_enter = input ( "rdtcx.py: level1 was a list , hit enter.." ) 
+
+  if ( str ( s_key == "points" ) ):
+    pnts_val = js_item.values() 
+    for pnt in pnts_val:
+      print ( "Points found, pnt_val: ", pnt )
+
+    print (" --- values printed above ---- " ) 
+    print ( " " )
+    hit_enter = input ( "rdtcx.py: points printed ? , hit enter.." ) 
+
+    # end if
+
+  # end for
+
+# print ( data_json.points.values ) 
+
+print ( " " )
 print ( " ------ end ------ " )
 print ( " " ) 
 
