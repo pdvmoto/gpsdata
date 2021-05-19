@@ -56,25 +56,32 @@ print ( " " )
 hit_enter = input ( "rdtcx.py: inspect repr data_json, hit enter.." ) 
 
 print ( " " ) 
-print ( "rdctx.py: length: ", len(data_json )  )
+print ( "rdctx.py: type, length: ", type ( data_json), len(data_json )  )
 print ( " " ) 
-hit_enter = input ( "rdtcx.py: length  data_json, hit enter.." ) 
+hit_enter = input ( "rdtcx.py: type, length  data_json, hit enter.." ) 
 print ( " " ) 
 
 for js_item  in data_json:
+
   # print ( " " )
   #  print ( " content:" )
   # print ( "rdtcx.py: json_item :" , js_item )
+
   print ( " " )
   print ( " keys:" )
+  print ( "rdtcx.py: json_item type :" , type ( js_item.keys() ) )
   print ( "rdtcx.py: json_item keys :" , js_item.keys() )
-  s_key = js_item.keys() 
-  print ( "rdtcx.py: json_item s_key :" , s_key ) 
+  s_key   = str ( js_item.keys() )
+  l_key  =  list ( js_item.keys() )
+  l_value = list ( js_item.values() )
+  print ( "rdtcx.py: json_item s_key :" , s_key, l_key[0] ) 
   print ( "rdtcx.py: json_item values :" , js_item.values() )
+  print ( "rdtcx.py: json_item values[0] :" , l_value[0] )
+
   print ( " " )
-  print ( " dir: " )
+  # print ( " dir: " )
   # print ( dir ( js_item ) ) 
-  print ( " " )
+  # print ( " " )
 
   hit_enter = input ( "rdtcx.py: inspect js_item , hit enter.." ) 
     
@@ -99,8 +106,12 @@ for js_item  in data_json:
       print ( " " )
       hit_enter = input ( "rdtcx.py: level1 was a list , hit enter.." ) 
 
-  if ( str ( s_key == "points" ) ):
+  if ( str ( s_key ) == "points" ):
+    print ( " " )
     pnts_val = js_item.values() 
+    print ( " points found...", type ( pnts_val ) ) 
+    print ( " points found...",        pnts_val ) 
+
     for pnt in pnts_val:
       print ( "Points found, pnt_val: ", pnt )
 
