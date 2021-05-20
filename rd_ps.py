@@ -23,6 +23,9 @@ import glob
 import math
 from datetime import datetime, date, time, timezone
 
+# import the prefix function
+from py_prfx import *
+
 # import cx_Oracle
 # import gpxpy
 # import gpxpy.gpx
@@ -39,24 +42,20 @@ s_json_fname = str ( "locations.json" )
 
 
 # functions:
-# f_prfx
+# f_prfx : from other file
 # f_ins_trip, create trip-record and return trip_id
 # f_ins_gps_file_rec, create file_record and return file_id
 # f_runk_do_gpx,  process gpx-file, return nr-points added
 
 
 # ------------------------------------------------
-def f_prfx():
-  # set a prefix for debug-output, sourcefile + timestamp
-
-  s_timessff = str ( datetime.now() )[11:23]
-  s_prefix = pyfile + ' ' + s_timessff + ': '
-
-  # print ( prfx, ' in function f_prfx: ' , s_prefix )
-
-  return str ( s_prefix )
-
-# end of f_prfx, set sourcefile and timestamp
+# def f_prfx():
+#   # set a prefix for debug-output, sourcefile + timestamp
+#   s_timessff = str ( datetime.now() )[11:23]
+#   s_prefix = pyfile + ' ' + s_timessff + ': '
+#   # print ( prfx, ' in function f_prfx: ' , s_prefix )
+#   return str ( s_prefix )
+# # end of f_prfx, set sourcefile and timestamp
 
 
 
