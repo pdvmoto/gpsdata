@@ -23,8 +23,9 @@ import glob
 import math
 from datetime import datetime, date, time, timezone
 
-# import the prefix function
-from py_prfx import *
+# import the prefix function, did not work becasue __file__ is needed
+# from py_prfx import *
+# from py_inspectobj import *
 
 # import cx_Oracle
 # import gpxpy
@@ -49,17 +50,41 @@ s_json_fname = str ( "locations.json" )
 
 
 # ------------------------------------------------
-# def f_prfx():
-#   # set a prefix for debug-output, sourcefile + timestamp
-#   s_timessff = str ( datetime.now() )[11:23]
-#   s_prefix = pyfile + ' ' + s_timessff + ': '
-#   # print ( prfx, ' in function f_prfx: ' , s_prefix )
-#   return str ( s_prefix )
-# # end of f_prfx, set sourcefile and timestamp
+def f_prfx():
+  # set a prefix for debug-output, sourcefile + timestamp
+  s_timessff = str ( datetime.now() )[11:23]
+  s_prefix = pyfile + ' ' + s_timessff + ': '
+  # print ( prfx, ' in function f_prfx: ' , s_prefix )
+  return str ( s_prefix )
+# end of f_prfx, set sourcefile and timestamp
 
 
 
-print ( f_prfx(), " -------- Starting -------- " ) 
+# inspect a python object:
+# show type, dir, length, rep, and more..
+# ------------------------------------------------
+def f_inspect_obj( s_objname, o_obj ):
+
+  print ( f_prfx(), "-------- Object :", s_objname, "--------" )
+
+  print ( f_prfx(), "o_obj -[", o_obj, "]-" )
+  print ( f_prfx(), "o_obj type  : ",  type (o_obj ) )
+  print ( f_prfx(), "o_obj length: ",  len (o_obj ) )
+  print ( f_prfx(), "o_obj dir   : ",  dir (o_obj ) )
+  print ( " " ) 
+  hit_enter = input ( f_prfx() + "meta data from " + s_objname + "...., hit enter.." ) 
+
+  print ( "--- repr --->" ) 
+  print ( f_prfx(), "o_obj repr  : ",  repr ( o_obj ) ) 
+  print ( "<--- repr ---  " ) 
+
+  print ( f_prfx(), " ------ inspected o_obj ", s_objname, " ---------- " ) 
+  hit_enter = input ( f_prfx() + "about to go back...., hit enter.." ) 
+
+# end of f_inspect_obj, show properties of an object
+
+
+print ( f_prfx(), " -------- Starting Main -------- " ) 
 
 print ( f_prfx(), " ------ start opening and reding json ------ " )
 
@@ -74,13 +99,9 @@ print ( f_prfx(), " file opened, and data_json object now loaded. " )
 print ( " " ) 
 print ( f_prfx(), "type: ", type ( data_json), ", length: ", len(data_json )  )
 print ( " " ) 
-hit_enter = input ( f_prfx() + " type, length  data_json, hit enter.." ) 
+print ( f_prfx(), dir ( data_json ) ) 
 print ( " " ) 
-
-print ( f_prfx(), " the dir of data_json: " ) 
-print ( dir ( data_json ) ) 
-print ( " " ) 
-hit_enter = input ( f_prfx() + "rdtcx.py: inspect dir data_json , hit enter.." ) 
+hit_enter = input ( f_prfx() + " type, length, dir of  data_json, hit enter.." ) 
 print ( " " ) 
 
 print ( f_prfx(), " the repr of data_json: " ) 
@@ -98,18 +119,18 @@ print ( f_prfx(), "js_locs type  : ", type (js_locs ) )
 print ( f_prfx(), "js_locs length: ",  len (js_locs ) )
 print ( f_prfx(), "js_locs dir   : ",  dir (js_locs ) )
 print ( " " ) 
-
-print ( f_prfx(), " inspected js_locs, about to go loop over... " ) 
-hit_enter = input ( f_prfx() + "about to go loop...., hit enter.." ) 
-print ( " " ) 
-
+print ( f_prfx(), "js_locs first element, js_locs[0] = " , js_locs[0] )
 print ( " " )
-print ( f_prfx(), " first element, js_locs[0] = " , js_locs[0] )
-print ( " " )
-print ( f_prfx(), " time of first element, js_locs[0].get ( 'time' )  = " , js_locs[0].get ( 'time' )  )
+print ( f_prfx(), "js_locs time of first element, js_locs[0].get ( 'time' )  = " , js_locs[0].get ( 'time' )  )
 print ( " " )
 hit_enter = input ( f_prfx() + "item[0]  ...., hit enter.." ) 
 
+# here test the inspects
+f_inspect_obj ( "js_locs"    , js_locs    )
+f_inspect_obj ( "data_json"  , data_json  ) 
+f_inspect_obj ( "js_locs[0]" , js_locs[0] ) 
+
+hit_enter = input ( f_prfx() + "js_locs inspected. ...., hit enter.." ) 
 
 # sort. lambda... try sorting on the time-element.
 # this is Really Clever..
