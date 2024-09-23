@@ -83,6 +83,12 @@ order by g.utc_hhmmss ;
 
 -- notes 2024.. saving trips per KML.
 
+rd_myadv.py worked : using oracledb, edit file-paht, and it Works ! 
+10M rows. 2100 hours of moto-time. 100 trips
+the exported .dmp file is on drive.google.com 
+
+next is : making maps for each trip. with 10sec or 1min interval
+
 Trip must have.. 
  - Name (from subdir title, remove number
  - start + end date. Start=known, End=from latet file
