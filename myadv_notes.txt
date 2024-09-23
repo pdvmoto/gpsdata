@@ -81,6 +81,29 @@ from gprmc g
 order by g.utc_hhmmss ; 
 
 
+-- notes 2024.. saving trips per KML.
+
+Trip must have.. 
+ - Name (from subdir title, remove number
+ - start + end date. Start=known, End=from latet file
+ - start point: put placemark with name, date.: 
+        min(date) for trip => placemark
+ - daily endpoint: last point of the day, put placemark down, with Date! 
+        max (date) per day. => placemark
+        up to about 50 placemarks per trip
+ - line per day: with 1min or 10sec interval ? 
+        refine interval later..
+        max 50 lines per trip..
+ - optional: loc-placemarks: start with 1 per hr ? 
+ - optional: line-style, more readable than thin-line? 
+
+helper tables:
+  - out_trip.._, including start (placemark)
+  - out trip_day: with line and max placemark per day
+  - out trip_day_point: location every 10sec, order by date to draw line
+  - [...] out_trip_hr: placemark per hr
+ 
+ 
 
 
 

@@ -6,7 +6,8 @@ import glob
 import zipfile
 import csv
 import math
-import cx_Oracle
+# import cx_Oracle
+import oracledb
 from datetime import datetime, date, time, timezone
 
 
@@ -297,6 +298,7 @@ n_lines_p_trip  = int ( 0 )
 
 # s_tripdir = str ( "/Users/pdvbv/Downloads/d447c196-bfda-4c1e-ba55-265d55b5e2c4" )
 s_tripdir = str ( "/Users/pdvbv/data/myadv_logs/tests" )
+s_tripdir = str (   "/Users/pdvbv/zz_myadv/d447c196-bfda-4c1e-ba55-265d55b5e2c4" ) 
 s_trip_subdirs = str ( "./[0-9]*" ) 
 s_logdir_path = str ( "./20*_1" ) 
 s_nmea_mask = str ( "*nmea.log" ) 
@@ -308,7 +310,8 @@ s_savecwd = os.getcwd()
 os.chdir ( s_tripdir ) 
 
 
-con = cx_Oracle.connect('scott/tiger@127.0.0.1:1521/orclpdb1')
+# con = oracledb.connect('scott/tiger@127.0.0.1:1521/orclpdb1')
+con = oracledb.connect('scott/tiger@localhost:1521/freepdb1')
 
 
 print ( f_prfx(), " jumped to trip-directory: ", s_tripdir ) 
