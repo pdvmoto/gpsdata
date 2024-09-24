@@ -115,9 +115,9 @@ helper tables:
 
 
 kml file for trip:
- - start loc
- - daily lines (with date, kms, time)..
- - start per day
- - end per day ?
- - [ kms or time per day ] 
+ - write start loc (plsql call usind dbms_output)
+ - loop over distinct days in the trip (for-select)
+    - write out day: startpoint
+    - write out day: line (possibly per distinct hr?)
+ - [ optional: kms or time per day ] 
 

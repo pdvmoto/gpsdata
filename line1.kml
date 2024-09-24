@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?> 
 <kml xmlns="http://earth.google.com/kml/2.0"> <Document>
+
 <Placemark>
   <name>loc: Start Test  </name>
   <description> copied from fleskml
@@ -11,6 +12,7 @@
     <coordinates> 21.692 ,  49.423 , 0 </coordinates>
   </Point>
 </Placemark>
+
 <Placemark> 
  <name>name of line</name>
  <description>Descripiton of line 
@@ -330,6 +332,20 @@
  21.684317 ,   49.36328 ,          0                                            
  21.684158 ,  49.363219 ,          0                                            
   21.68401 ,  49.363164 ,          0                                            
+  </coordinates>
+ </LineString>
+</Placemark>
+<Placemark>
+ <name>small linee</name>
+ <description>Descripiton of small line 
+  small line
+  third desc-line.
+ </description>
+  <LineString>
+   <coordinates>
+ 21.684400  ,  49.36320 ,          0                                            
+ 21.684400  ,  49.36330 ,          0                                            
+ 21.684400  ,  49.36340 ,          0                                            
   </coordinates>
  </LineString>
 </Placemark>
