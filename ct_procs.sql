@@ -77,12 +77,14 @@ begin
       -- dbms_output.put_line ( '  kml_trip: ' ||  tr.id       || ', ' || tr.name 
       --                     || ', '           || tr.nr_points || ', started: ' || to_char ( tr.start_dt, 'yyyymmdd hh24miss' ) ); 
 
-      -- need to find starting point from min-dt of trip 
-
-      select l.lat, l.lon
+      -- need to find starting point from min-dt of trip, min-dt
+      select t.lat, t.lon
       into  start_lat, start_lon
-      from gps_line l
-      where rownum < 2 ;
+      from trip_data t
+      where 1=1
+        and t.id = tr.id
+        and t.dt = ( select min(dt) from trip_data tm where tm.id = t.id )
+        and rownum < 2 ;  -- overkill just to be sure, only 1 line..
 
       dbms_output.put_line (
                     '<Placemark> <name>' || tr.name  || '</name>'
@@ -122,6 +124,7 @@ begin
   dbms_output.put_line ( '<Placemark> ' ) ; 
   dbms_output.put_line ( '  <LineString> <coordinates> ' ) ; 
 
+  -- for the moment: one long line..
   for line_point in ( select '    '  || to_char ( l.lon, '99.9999' ) 
                           || ', ' || to_char ( l.lat, '99.9999' )  
                           || ', 0.0' as vc_coord 
@@ -134,6 +137,8 @@ begin
                        order by l.dt 
   ) loop
 
+    -- simple formattting was inside the SQL...
+    -- mind the ss=00 as implicit filter
     dbms_output.put_line ( line_point.vc_coord );
 
   end loop ; -- over lines
@@ -145,11 +150,66 @@ end kml_triplines ; ---------------
 /
 show errors
 
+! echo create kml_tripdays points per day
+
+create or replace procedure kml_tripdays (trp_id in number )  as
+  cr_lf         varchar2(2) := chr(10) ; 
+begin
+
+  for tday in (
+  with days as (
+  select t.id
+       , trunc (t.dt) trip_day
+       , to_char ( min ( t.dt) , 'DD MON YYYY HH24:MI' ) starttim
+       , min(t.dt) as start_dt
+  from trip_data t
+  where t.id = trp_id
+  group by t.id, trunc (t.dt )
+  )
+  select t.dt
+       , t.lon
+       , t.lat
+       , d.starttim   -- dont format yet..
+  from trip_data t
+     , days d
+  where 1=1
+    and d.start_dt = t.dt -- risk: assuming unique timestamps
+    and t.id = d.id
+  order by 1
+  ) loop 
+
+      dbms_output.put_line (
+                    '<Placemark> <name> dd: ' || to_char ( tday.dt, 'DD Mon YYYY' ) || '</name>'
+        || cr_lf || '  <description> started off: ' 
+                 || to_char ( tday.dt, 'HH24:MI' ) 
+        || cr_lf || '  </description>' ) ;
+
+      dbms_output.put_line ( 
+                    '  <Point>' 
+        || cr_lf || '    <coordinates> ' 
+                 || to_char ( tday.lon, '99.9999' ) || ' , '
+                 || to_char ( tday.lat, '99.9999' ) || ' , 0 </coordinates> '
+        || cr_lf || '  </Point>' 
+      ) ; 
+
+      dbms_output.put_line ( '</Placemark>' );
+
+      null ; 
+    -- later: generate 1 line per day, and put comment on it?
+
+  end loop ; -- loop, generated placemark for every day-start
+
+end kml_tripdays ;
+/
+show errors 
+
 
 ! echo now for real...
 
 set feedback off
 set serveroutput on size unlimited
+set linesize 200
+set trimspool on
 
 spool aatest.kml
 
@@ -160,11 +220,21 @@ declare
 begin
 
   kml_head ; 
-  kml_tripstart ( 118  ) ; 
-  kml_triplines ( 118  ) ; 
+  kml_tripstart ( 118 ) ; 
+  kml_triplines ( 118 ) ; 
+  kml_tripdays  ( 118 ) ;
   kml_foot ; 
 end;
 /
 
 spool off
+
+-- show copy command to save file
+
+select ' ! cp aatest.kml '
+  || substr ( trp_name, instr ( trp_name, '_' )+1, length ( trp_name) ) || '.kml' as cpcmd
+from trip t
+where t.id = 118 ;
+
+
 

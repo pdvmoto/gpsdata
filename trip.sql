@@ -1,12 +1,21 @@
 
 column trpnr format A8 
 column trpnm format A20 
+column cpcmd format A60 
 
 select id  
 , instr ( trp_name, '_' ) pos
 , substr ( trp_name, 1, instr ( trp_name, '_')-1 ) as trpnr 
 , substr ( trp_name, instr ( trp_name, '_' )+1, length ( trp_name) ) as trpnm
  from trip ; 
+
+select ' ! cp aatest.kml ' 
+  || substr ( trp_name, instr ( trp_name, '_' )+1, length ( trp_name) ) || '.kml' as cpcmd
+from trip t
+where t.id = 17 ; 
+
+
+! read -t 5 -p "check the copy command " abc 
 
 -- min/max of trip, add to trip-info
 select t.id

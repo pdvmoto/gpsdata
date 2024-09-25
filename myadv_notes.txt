@@ -39,6 +39,13 @@ todo:
  - re-arrange order of columns : lon, lat, ele, then the rest.
  - measuring time during inserts.. doesnt work well ??
 
+todo 2024:
+ - 10sec instead of 1min intervals ?
+ - arrows on lines ? 
+ - hourly point ? messy, but informative
+ - create maps (can use layers for muliple trips)
+ - blogpost with links for quick access !
+
 List of sources:
  - consider 1 python-program per source, but some are shared components.
  - myadv-Stoyan, datadump: contains subdirs per trip, subdir=triptitle, program works, takes abt 2hr to load.
