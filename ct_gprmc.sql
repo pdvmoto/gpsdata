@@ -70,7 +70,7 @@ if points are close, speed=same,  heading=same.. removed points in between..
 
 ***/
 
-/**/
+/**
 
 drop sequence trip_seq; 
 drop sequence gps_file_seq;
@@ -84,6 +84,8 @@ drop table gps_file ;
 
 create sequence trip_seq;
 create sequence gps_file_seq;
+
+*/ 
 
 create table gps_file ( 
   id            number          not null
@@ -122,6 +124,8 @@ alter table gps_line add constraint gps_line_pk     primary key ( gfil_id, line_
 
 alter table gps_line add constraint gps_line_trp_fk foreign key ( gfil_id ) references gps_file ( id ) ; 
 
+-- index for use in view, entry via trip_points, on day, order by dt
+create index gps_line_i1 on gps_line ( gfil_id, line_nr, dt, lat, lon ) ;
 
 create table trip (
   id            number not null
@@ -134,7 +138,7 @@ create table trip (
 
 alter table trip add constraint trip_pk primary key ( id ) using index ;
 
-create index trip_name on trip ( trp_name ) ;
+create index trip_name on trip ( trp_name, id ) ;
 
 
 -- consider this an IOT + 2ndary index on trp_id
@@ -150,4 +154,20 @@ create index trip_point_trp_idx on trip_point ( trp_id, gfil_id, line_nr ) ;
 
 alter table trip_point add constraint trip_point_fk_trp foreign key ( trp_id )           references trip ( id ) ;
 alter table trip_point add constraint trip_point_fk_gln foreign key ( gfil_id, line_nr ) references gps_line ( gfil_id, line_nr ) ;
+
+-- use a view to link trip-data
+create or replace view trip_data as 
+select    t.id as id
+       , substr ( trp_name, 1, instr ( trp_name, '_')-1 ) as trip_nr
+       , substr ( t.trp_name, instr ( t.trp_name, '_' )+1, length ( t.trp_name) ) as t_name
+       , l.dt 
+       , l.lon, l.lat 
+    from trip t
+       , gps_line l
+      , trip_point tp
+    where 1=1
+      and tp.gfil_id = l.gfil_id
+      and tp.line_nr = l.line_nr
+      and tp.trp_id  = t.id
+;
 

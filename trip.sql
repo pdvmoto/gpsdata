@@ -21,7 +21,7 @@ where 1=1
   and tp.gfil_id = l.gfil_id 
   and tp.line_nr = l.line_nr
   and tp.trp_id  = t.id
-  and trp_name like '137_OUG%2016'
+  -- and trp_name like '137_OUG%2016'
 group by 
   t.id
 , t.trp_name
