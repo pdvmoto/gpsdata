@@ -19,10 +19,11 @@ where t.id = 17 ;
 
 -- min/max of trip, add to trip-info
 select t.id
-, substr ( trp_name, 1, instr ( trp_name, '_')-1 ) as trpnr 
+-- , substr ( trp_name, 1, instr ( trp_name, '_')-1 ) as trpnr 
 , substr ( t.trp_name, instr ( t.trp_name, '_' )+1, length ( t.trp_name) ) as trpnm
 , count (*) nr_lines
-, min (dt) earliest, max ( dt) latest 
+, min (dt) earliest
+, max ( dt) latest 
 from trip t 
    , gps_line l
    , trip_point tp
@@ -35,7 +36,7 @@ group by
   t.id
 , t.trp_name
 , substr ( t.trp_name, instr ( t.trp_name, '_' )+1, length ( t.trp_name) ) 
-order by 5 
+order by 4 
 ;
 
 ! echo .

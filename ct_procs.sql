@@ -11,6 +11,22 @@ todo, mainly add procedures to produce kml::
  - test resolutions, minute, 10sec, size of files ok ?
 ****** */
 
+-- need this view to join data in 1 view
+create or replace view trip_data as 
+select t.id
+     , t.trp_name --substr
+     , l.dt
+     , l.lon
+     , l.lat
+from trip t
+   , gps_line l
+   , trip_point tp
+where 1=1
+  and tp.trp_id = t.id
+  and tp.gfil_id = l.gfil_id
+  and tp.line_nr = l.line_nr
+;
+
 ! echo create kml_head 
 
 create or replace procedure kml_head as
@@ -109,6 +125,7 @@ begin
 
 end kml_tripstart ; -------------------------
 /
+list
 show errors
 
 
@@ -148,6 +165,7 @@ begin
 
 end kml_triplines ; --------------- 
 /
+list
 show errors
 
 ! echo create kml_tripdays points per day
@@ -201,6 +219,7 @@ begin
 
 end kml_tripdays ;
 /
+list
 show errors 
 
 
