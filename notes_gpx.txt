@@ -1,0 +1,25 @@
+
+general ideas:
+
+1. reading the data..
+ - place all gpx in 1 dir or dir-tree.
+ - create a table for gpx-data: lon, lat, ele, time
+ - load all the data into the table - detect doubles based on... time ? => epoch + 6 decimals, microseconds ?
+ - need the origin of the data..
+ - for every record: point to a parent-file, with filename, origing (polarstaps, ramlr, BMW, my-adventure..)
+ - to allow doubles.. the key to location-data is both file-id and timestamp (or just file-id?)
+
+
+    - need function/macro: get_epoch ( date ) and get_epoch ( timestamp )  => return the epoch_seconds.dddddd
+    - pk can be epoch.dddddd, that will automatically order-by
+
+2. maps, lines, points
+ - generate KML or similar files..
+    - one line per whole-hour, with start-end-time in comment.
+    - line per hour should indicate direction, also check: linestyle + arrow 
+    - one point for end of day, with end-time in comment
+
+3. extras: what resolution should line-points be? 
+  - at speed can be 10+ sec
+  - slow or diverse movements: 1/sec
+
